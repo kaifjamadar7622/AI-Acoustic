@@ -1,0 +1,10 @@
+gradio>=4.0.0
+accelerate
+SpeechRecognition
+diffusers
+torch
+pillow
+transformers
+safetensors
+huggingface_hub
+sentencepiece

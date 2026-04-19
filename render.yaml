@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: acoustic-artistry
+    runtime: python
+    plan: free
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    autoDeploy: true
+    envVars:
+      - key: HF_TOKEN
+        sync: false
+      - key: SD_MODEL_ID
+        value: CompVis/stable-diffusion-v1-4
+      - key: PROMPT_MODEL_ID
+        value: google/flan-t5-base
