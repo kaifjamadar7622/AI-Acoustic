@@ -207,26 +207,18 @@ def create_genai_result(audio_file_path, style_name, extra_instructions, steps, 
 if __name__ == "__main__":
     from ui import build_ui
 
+    # Gradio 4.x can crash while building API metadata in this environment.
+    # Replace the metadata route with an empty response so the UI can start.
+    import gradio.blocks
+    import gradio.routes
+
+    gradio.routes.api_info = lambda include_str=False: {}
+    gradio.blocks.Blocks.get_api_info = lambda self: {}
+
     port = int(os.getenv("PORT", "7860"))
-    is_space = bool(os.getenv("SPACE_ID"))
-    if is_space:
-        # Spaces runtime hits Gradio's API schema route during startup. Disable it in-place.
-        import gradio.blocks
-        import gradio.routes
-
-        gradio.routes.api_info = lambda include_str=False: {}
-        gradio.blocks.Blocks.get_api_info = lambda self: {}
-
-        build_ui().launch(
-            server_name="0.0.0.0",
-            server_port=port,
-            share=False,
-            show_api=False,
-        )
-    else:
-        build_ui().launch(
-            server_name="0.0.0.0",
-            server_port=port,
-            share=False,
-            show_api=False,
-        )
+    build_ui().launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        share=False,
+        show_api=False,
+    )
