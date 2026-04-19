@@ -208,8 +208,10 @@ if __name__ == "__main__":
     from ui import build_ui
 
     port = int(os.getenv("PORT", "7860"))
+    is_space = bool(os.getenv("SPACE_ID"))
     build_ui().launch(
         server_name="0.0.0.0",
         server_port=port,
-        share=False,
+        share=is_space,
+        show_api=False,
     )

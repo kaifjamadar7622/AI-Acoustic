@@ -1,5 +1,6 @@
 gradio==4.44.1
 gradio_client==1.3.0
+fastapi==0.112.4
 accelerate
 SpeechRecognition
 diffusers
