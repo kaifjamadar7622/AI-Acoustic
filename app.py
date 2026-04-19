@@ -208,22 +208,33 @@ if __name__ == "__main__":
     from ui import build_ui
 
     # Work around Gradio client schema parsing bug where boolean schemas
-    # (e.g. additionalProperties: false) are passed to get_type().
+    # (e.g. additionalProperties: true/false) raise APIInfoParseError.
     import gradio_client.utils as gr_client_utils
 
     _orig_get_type = gr_client_utils.get_type
+    _orig_json_schema_to_python_type = gr_client_utils._json_schema_to_python_type
+    APIInfoParseError = gr_client_utils.APIInfoParseError
 
     def _safe_get_type(schema):
         if isinstance(schema, bool):
             return "Any"
         return _orig_get_type(schema)
 
+    def _safe_json_schema_to_python_type(schema, defs=None):
+        if isinstance(schema, bool):
+            return "Any"
+        try:
+            return _orig_json_schema_to_python_type(schema, defs)
+        except APIInfoParseError:
+            return "Any"
+
     gr_client_utils.get_type = _safe_get_type
+    gr_client_utils._json_schema_to_python_type = _safe_json_schema_to_python_type
 
     port = int(os.getenv("PORT", "7860"))
     build_ui().launch(
         server_name="0.0.0.0",
         server_port=port,
-        share=False,
+        share=True,
         show_api=False,
     )
