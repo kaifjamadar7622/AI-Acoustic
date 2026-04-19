@@ -1,4 +1,16 @@
-🎨 Acoustic Artistry - Voice to Image Generator
+---
+title: Acoustic Artistry
+emoji: 🎤
+colorFrom: purple
+colorTo: blue
+sdk: gradio
+sdk_version: "4.x"
+python_version: "3.10"
+app_file: app.py
+pinned: false
+---
+
+# 🎨 Acoustic Artistry - Voice to Image Generator
 
 Created by Kaif Jamadar.
 
