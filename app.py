@@ -209,9 +209,13 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", "7860"))
     is_space = bool(os.getenv("SPACE_ID"))
-    build_ui().launch(
-        server_name="0.0.0.0",
-        server_port=port,
-        share=is_space,
-        show_api=False,
-    )
+    if is_space:
+        # Spaces manages routing; avoid localhost/share checks that fail in container networking.
+        build_ui().launch(show_api=False)
+    else:
+        build_ui().launch(
+            server_name="0.0.0.0",
+            server_port=port,
+            share=False,
+            show_api=False,
+        )

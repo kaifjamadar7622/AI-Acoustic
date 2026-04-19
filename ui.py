@@ -429,8 +429,13 @@ def _normalize_username(username):
 
 def _history_views(username):
     if not username:
-        return [], []
-    return history_table_rows(username, limit=10), history_gallery_items(username, limit=6)
+        return "", []
+    rows = history_table_rows(username, limit=10)
+    if not rows:
+        return "No saved generations yet.", []
+    lines = ["Created | Style | Transcript | Status"]
+    lines.extend(" | ".join(row) for row in rows)
+    return "\n".join(lines), history_gallery_items(username, limit=6)
 
 
 def _signed_in_label(username, display_name=None):
@@ -445,11 +450,11 @@ def create_account(username, display_name, password, confirm_password):
     display_name = (display_name or username).strip() or username
 
     if password != confirm_password:
-        return "Passwords do not match.", "", _signed_in_label("") , [], []
+        return "Passwords do not match.", "", _signed_in_label("") , "", []
 
     ok, message = register_user(username, password, display_name)
     if not ok:
-        return message, "", _signed_in_label(""), [], []
+        return message, "", _signed_in_label(""), "", []
 
     history_rows, history_gallery = _history_views(username)
     return message, username, _signed_in_label(username, display_name), history_rows, history_gallery
@@ -459,14 +464,14 @@ def sign_in(username, password):
     username = _normalize_username(username)
     ok, message, account = authenticate_user(username, password)
     if not ok or not account:
-        return message, "", _signed_in_label(""), [], []
+        return message, "", _signed_in_label(""), "", []
 
     history_rows, history_gallery = _history_views(account["username"])
     return message, account["username"], _signed_in_label(account["username"], account["display_name"]), history_rows, history_gallery
 
 
 def sign_out():
-    return "Signed out.", "", _signed_in_label(""), [], []
+    return "Signed out.", "", _signed_in_label(""), "", []
 
 def run_generation(audio, style, extra, variations, steps, guidance, width, height, seed, fast_mode, username):
     """Wrapper that maps UI inputs to backend function signature."""
@@ -478,12 +483,12 @@ def run_generation(audio, style, extra, variations, steps, guidance, width, heig
             None,
             None,
             "⚠  No audio detected. Please record or upload a voice clip first.",
-            [],
+            "",
             [],
         )
         return
     status = "🎬  Initialising generation pipeline…"
-    yield "", "", "", None, None, status, [], []
+    yield "", "", "", None, None, status, "", []
 
     try:
         username = _normalize_username(username) or "anonymous"
@@ -529,7 +534,7 @@ def run_generation(audio, style, extra, variations, steps, guidance, width, heig
             history_gallery,
         )
     except Exception as e:
-        yield "", "", "", None, None, f"❌  Error: {str(e)}", [], []
+        yield "", "", "", None, None, f"❌  Error: {str(e)}", "", []
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -655,7 +660,7 @@ with gr.Blocks(css=CUSTOM_CSS, title="Acoustic Artistry AI Studio | Kaif Jamadar
                 with gr.Row(equal_height=False):
                     with gr.Column(scale=1, elem_classes="glass-panel"):
                         gr.HTML('<p class="section-label">🕘 Your History</p>')
-                        history_table = gr.Dataframe(headers=["Created", "Style", "Transcript", "Status"], datatype=["str", "str", "str", "str"], interactive=False, wrap=True, label="", show_label=False, value=[])
+                        history_table = gr.Textbox(label="", show_label=False, lines=8, interactive=False, value="No saved generations yet.")
                         history_gallery = gr.Gallery(label="", show_label=False, columns=3, rows=2, object_fit="cover", height=260)
                         gr.Markdown("<div class='panel-note'>Tip: sign in before generating to store new results here.</div>")
 
