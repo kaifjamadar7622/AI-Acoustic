@@ -207,13 +207,18 @@ def create_genai_result(audio_file_path, style_name, extra_instructions, steps, 
 if __name__ == "__main__":
     from ui import build_ui
 
-    # Gradio 4.x can crash while building API metadata in this environment.
-    # Replace the metadata route with an empty response so the UI can start.
-    import gradio.blocks
-    import gradio.routes
+    # Work around Gradio client schema parsing bug where boolean schemas
+    # (e.g. additionalProperties: false) are passed to get_type().
+    import gradio_client.utils as gr_client_utils
 
-    gradio.routes.api_info = lambda include_str=False: {}
-    gradio.blocks.Blocks.get_api_info = lambda self: {}
+    _orig_get_type = gr_client_utils.get_type
+
+    def _safe_get_type(schema):
+        if isinstance(schema, bool):
+            return "Any"
+        return _orig_get_type(schema)
+
+    gr_client_utils.get_type = _safe_get_type
 
     port = int(os.getenv("PORT", "7860"))
     build_ui().launch(
