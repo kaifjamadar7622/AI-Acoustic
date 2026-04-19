@@ -1,4 +1,5 @@
-gradio==4.31.0
+gradio==4.44.1
+gradio_client==1.3.0
 accelerate
 SpeechRecognition
 diffusers
@@ -6,5 +7,5 @@ torch
 pillow
 transformers
 safetensors
-huggingface_hub==0.25.2
+huggingface_hub==0.36.0
 sentencepiece
