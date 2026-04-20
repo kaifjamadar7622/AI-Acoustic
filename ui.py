@@ -2,6 +2,7 @@ import os
 
 import gradio as gr
 from app import STYLE_PRESETS, create_genai_result
+from research_agents import ResearchPipelineError, run_research_pipeline
 from storage import authenticate_user, history_gallery_items, history_table_rows, register_user
 
 # ── Cinematic dark glassmorphism theme ────────────────────────────────────────
@@ -562,6 +563,27 @@ def run_generation(audio, style, extra, variations, steps, guidance, width, heig
         yield "", "", "", None, None, f"❌  Error: {str(e)}", "", []
 
 
+def run_research(topic):
+    topic = (topic or "").strip()
+    if not topic:
+        return "Enter a research topic.", "", "", "", ""
+
+    try:
+        state = run_research_pipeline(topic)
+    except ResearchPipelineError as exc:
+        return f"Research setup error: {exc}", "", "", "", ""
+    except Exception as exc:
+        return f"Research failed: {exc}", "", "", "", ""
+
+    return (
+        "Research completed successfully.",
+        state.get("search_results", ""),
+        state.get("selected_url", ""),
+        state.get("report", ""),
+        state.get("feedback", ""),
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 
 with gr.Blocks(css=CUSTOM_CSS, title="Acoustic Artistry AI Studio | Kaif Jamadar") as demo:
@@ -697,6 +719,26 @@ with gr.Blocks(css=CUSTOM_CSS, title="Acoustic Artistry AI Studio | Kaif Jamadar
                         - Use fast mode for free-tier deployments
                         """)
 
+            with gr.Tab("Research"):
+                gr.HTML('<div class="tab-note">Run multi-agent research (Search -> Reader -> Writer -> Critic).</div>')
+                with gr.Row(equal_height=False):
+                    with gr.Column(scale=1, elem_classes="glass-panel"):
+                        gr.HTML('<p class="section-label">🔬 Research Input</p>')
+                        research_topic = gr.Textbox(
+                            label="Research Topic",
+                            placeholder="e.g. Future of multimodal AI agents in healthcare",
+                            lines=2,
+                        )
+                        research_run_btn = gr.Button("Run Multi-Agent Research", variant="primary")
+                        research_status = gr.Textbox(label="", show_label=False, interactive=False, lines=2)
+                        research_selected_url = gr.Textbox(label="Selected Source URL", interactive=False, lines=2)
+
+                    with gr.Column(scale=1, elem_classes="glass-panel"):
+                        gr.HTML('<p class="section-label">📚 Research Outputs</p>')
+                        research_search_results = gr.Textbox(label="Search Results", interactive=False, lines=10)
+                        research_report = gr.Textbox(label="Final Report", interactive=False, lines=12)
+                        research_feedback = gr.Textbox(label="Critic Feedback", interactive=False, lines=8)
+
     # ── Footer ────────────────────────────────────────────────────────────────
     gr.HTML("""
     <div style="text-align:center; padding:24px 0 12px; color:#3a3530;
@@ -750,6 +792,18 @@ with gr.Blocks(css=CUSTOM_CSS, title="Acoustic Artistry AI Studio | Kaif Jamadar
         fn=sign_out,
         inputs=[],
         outputs=[auth_status, current_user_state, signed_in_view, history_table, history_gallery],
+    )
+
+    research_run_btn.click(
+        fn=run_research,
+        inputs=[research_topic],
+        outputs=[
+            research_status,
+            research_search_results,
+            research_selected_url,
+            research_report,
+            research_feedback,
+        ],
     )
 
 
