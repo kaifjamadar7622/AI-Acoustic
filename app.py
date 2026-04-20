@@ -204,37 +204,65 @@ def create_genai_result(audio_file_path, style_name, extra_instructions, steps, 
     return transcript, prompt, negative_prompt, images, audio_file_path, status
 
 
-if __name__ == "__main__":
-    from ui import build_ui
+def _configure_gradio_schema_workaround():
+    """Patch a known Gradio client schema parsing edge case at runtime.
 
-    # Work around Gradio client schema parsing bug where boolean schemas
-    # (e.g. additionalProperties: true/false) raise APIInfoParseError.
+    Some Gradio builds may receive boolean JSON schema nodes for
+    `additionalProperties`, which can raise `APIInfoParseError` during startup.
+    """
     import gradio_client.utils as gr_client_utils
 
-    _orig_get_type = gr_client_utils.get_type
-    _orig_json_schema_to_python_type = gr_client_utils._json_schema_to_python_type
-    APIInfoParseError = gr_client_utils.APIInfoParseError
+    original_get_type = gr_client_utils.get_type
+    original_json_schema_to_python_type = gr_client_utils._json_schema_to_python_type
+    api_info_parse_error = gr_client_utils.APIInfoParseError
 
     def _safe_get_type(schema):
         if isinstance(schema, bool):
             return "Any"
-        return _orig_get_type(schema)
+        return original_get_type(schema)
 
     def _safe_json_schema_to_python_type(schema, defs=None):
         if isinstance(schema, bool):
             return "Any"
         try:
-            return _orig_json_schema_to_python_type(schema, defs)
-        except APIInfoParseError:
+            return original_json_schema_to_python_type(schema, defs)
+        except api_info_parse_error:
             return "Any"
 
     gr_client_utils.get_type = _safe_get_type
     gr_client_utils._json_schema_to_python_type = _safe_json_schema_to_python_type
 
+
+def _should_share_link() -> bool:
+    flag = os.getenv("GRADIO_SHARE", "").strip().lower()
+    return flag in {"1", "true", "yes", "on"}
+
+
+def launch_app():
+    from ui import build_ui
+
+    _configure_gradio_schema_workaround()
     port = int(os.getenv("PORT", "7860"))
-    build_ui().launch(
-        server_name="0.0.0.0",
-        server_port=port,
-        share=True,
-        show_api=False,
-    )
+
+    app = build_ui()
+    try:
+        app.launch(
+            server_name="0.0.0.0",
+            server_port=port,
+            share=_should_share_link(),
+            show_api=False,
+        )
+    except ValueError as exc:
+        # Fallback for hosted environments where localhost checks can fail.
+        if "localhost is not accessible" not in str(exc).lower():
+            raise
+        app.launch(
+            server_name="0.0.0.0",
+            server_port=port,
+            share=True,
+            show_api=False,
+        )
+
+
+if __name__ == "__main__":
+    launch_app()

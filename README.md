@@ -1,8 +1,8 @@
 ---
 title: Acoustic Artistry
 emoji: 🎤
-colorFrom: purple
-colorTo: blue
+colorFrom: orange
+colorTo: teal
 sdk: gradio
 sdk_version: "4.44.1"
 python_version: "3.10"
@@ -10,61 +10,104 @@ app_file: app.py
 pinned: false
 ---
 
-# 🎨 Acoustic Artistry - Voice to Image Generator
+# Acoustic Artistry
 
-Created by Kaif Jamadar.
+Acoustic Artistry is a Gradio application that combines two workflows:
 
-This project uses Gradio, SpeechRecognition, and Stable Diffusion to generate AI images from your voice input.
+1. Voice-to-image generation with Stable Diffusion
+2. Multi-agent web research with report writing and critique
 
-Features
-- Record audio using your microphone
-- Transcribe the speech to text
-- Generate an image from the transcribed text using Stable Diffusion
+The app is designed for local usage and Hugging Face Spaces free-tier deployment.
 
- Installation
-1. Clone the repository:
-   git clone https://github.com/your-username/voice-to-image-generator.git
-   cd voice-to-image-generator
-   
-2. Install dependencies:
-   pip install -r requirements.txt
-   
-3. Run the app:
-   python app.py
+## Features
 
-Setup notes
-- If the Stable Diffusion model download is blocked, set `HF_TOKEN` or `HUGGINGFACE_HUB_TOKEN` to a Hugging Face access token that has permission to use `CompVis/stable-diffusion-v1-4`.
-- The app now uses a GenAI prompt enhancer with `google/flan-t5-base`. If that model is unavailable, it falls back to local prompt expansion.
-- No API key is required for speech recognition; the app uses Google's public speech-to-text endpoint through `SpeechRecognition`.
-- Make sure microphone access is allowed in the browser when you open Gradio.
-- If you generate a custom UI with Claude, paste it into [ui.py](ui.py). Keep the `create_genai_result(...)` function call signature the same so the UI remains connected to the backend.
-- The app now includes local sign up, sign in, and per-user generation history.
-- Logged-in users get their generation records saved in `data/acoustic_artistry.db`.
-- Generated image files are stored under `data/generated/<username>/`.
-- You can generate as a guest without signing in; history is only saved for logged-in users.
-- The app is tuned for free-tier hosting with fast defaults and optional prompt enhancement.
+- Voice recording and speech-to-text prompt extraction
+- Prompt enhancement before image generation
+- Stable Diffusion image generation
+- Local account system (signup/signin) with per-user history
+- Multi-agent research pipeline (search, read, write, critique)
 
-Recommended free-tier deployment
-1. Push this repo to GitHub.
-2. Create a Hugging Face Space using the Gradio SDK.
-3. Connect your GitHub repo or upload the files.
-4. Add `HF_TOKEN` as a secret in Space settings.
-5. Deploy on ZeroGPU or the free shared hardware option.
-6. Use the Create tab to generate, the Account tab to save work, and the History tab to review past runs.
+## Project Structure
 
-Deployment note
-- The local SQLite history is best for temporary or small-scale free-tier deployments. For persistent cloud-wide history, you would move to a hosted database later.
+- `app.py`: main entrypoint, startup configuration, and app launch
+- `ui.py`: Gradio UI layout and event wiring
+- `storage.py`: user auth and SQLite-backed history persistence
+- `research_agents.py`: research pipeline orchestration
+- `requirements.txt`: pinned dependencies for local and Spaces runtime
+- `.env.example`: required and optional environment variables
 
-Publish this project to your GitHub repo
-1. Create an empty repository on GitHub (without README/license/gitignore) with your preferred name.
-2. In this project folder, run:
-   git add .
-   git commit -m "Initial commit - Acoustic Artistry by Kaif Jamadar"
-3. Add your GitHub remote:
-   git remote add origin https://github.com/<your-username>/<your-repo>.git
-4. Push to GitHub:
-   git branch -M main
-   git push -u origin main
+## Requirements
+
+- Python 3.10+
+- `ffmpeg` available on system path (for robust audio handling)
+
+## Quick Start (Local)
+
+1. Clone and enter the project directory.
+
+```bash
+git clone https://github.com/<your-username>/AI-Acoustic.git
+cd AI-Acoustic/AcousticArtistry
+```
+
+2. Create and activate a virtual environment.
+
+```bash
+python -m venv .venv
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+3. Install dependencies.
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Copy environment template and set keys.
+
+```bash
+copy .env.example .env
+```
+
+5. Run the app.
+
+```bash
+python app.py
+```
+
+## Environment Variables
+
+Required for image generation:
+
+- `HF_TOKEN`: Hugging Face token with access to the selected SD model
+
+Required for research tab:
+
+- `OPENAI_API_KEY`: OpenAI key for writer/critic/model steps
+- `TAVILY_API_KEY`: Tavily key for web search
+
+Optional:
+
+- `SD_MODEL_ID`: override default Stable Diffusion model
+- `PROMPT_MODEL_ID`: override prompt enhancement model
+- `GRADIO_SHARE`: set `true` to force share link locally
+
+## Hugging Face Spaces Deployment
+
+1. Create a new Gradio Space.
+2. Push this folder contents to the Space repository.
+3. In Space settings, add secrets:
+   - `HF_TOKEN`
+   - `OPENAI_API_KEY` (if using Research tab)
+   - `TAVILY_API_KEY` (if using Research tab)
+4. Ensure `requirements.txt` and this README metadata remain in sync.
+
+## Notes
+
+- User history is stored in `data/acoustic_artistry.db`.
+- Generated images are saved under `data/generated/<username>/`.
+- Guest generation is supported, but history is saved only for authenticated users.
 
 
 

@@ -809,13 +809,3 @@ with gr.Blocks(css=CUSTOM_CSS, title="Acoustic Artistry AI Studio | Kaif Jamadar
 
 def build_ui():
     return demo
-
-
-# ── Entry point ───────────────────────────────────────────────────────────────
-if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        show_api=False,
-        share=False,
-    )
