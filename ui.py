@@ -1,3 +1,5 @@
+import os
+
 import gradio as gr
 from app import STYLE_PRESETS, create_genai_result
 from storage import authenticate_user, history_gallery_items, history_table_rows, register_user
@@ -473,9 +475,32 @@ def sign_in(username, password):
 def sign_out():
     return "Signed out.", "", _signed_in_label(""), "", []
 
+
+def _resolve_audio_path(audio):
+    """Normalize Gradio audio payloads to an existing local file path."""
+    if audio is None:
+        return None
+
+    if isinstance(audio, str):
+        path = audio.strip()
+        return path if path and os.path.exists(path) else None
+
+    if isinstance(audio, dict):
+        candidate = (audio.get("path") or audio.get("name") or "").strip()
+        return candidate if candidate and os.path.exists(candidate) else None
+
+    if isinstance(audio, (list, tuple)) and audio:
+        first = audio[0]
+        if isinstance(first, str):
+            path = first.strip()
+            return path if path and os.path.exists(path) else None
+
+    return None
+
 def run_generation(audio, style, extra, variations, steps, guidance, width, height, seed, fast_mode, username):
     """Wrapper that maps UI inputs to backend function signature."""
-    if audio is None:
+    audio_path = _resolve_audio_path(audio)
+    if not audio_path:
         yield (
             "",
             "",
@@ -501,7 +526,7 @@ def run_generation(audio, style, extra, variations, steps, guidance, width, heig
 
         safe_seed = None if seed in (None, "") else int(seed)
         result = create_genai_result(
-            audio_file_path=audio,
+            audio_file_path=audio_path,
             style_name=style,
             extra_instructions=extra,
             steps=int(steps),
