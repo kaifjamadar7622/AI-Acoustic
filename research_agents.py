@@ -65,7 +65,7 @@ def _extract_urls(search_results: str) -> list[str]:
     urls = re.findall(r"https?://\S+", search_results)
     cleaned = []
     for url in urls:
-        cleaned.append(url.rstrip(".,);]\\"'"))
+        cleaned.append(url.rstrip(".,);]\\\"'"))
     unique = []
     seen = set()
     for u in cleaned:
